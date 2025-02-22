@@ -1,0 +1,338 @@
+--https://discord.gg/AfNyhky3
+
+-- Global settings
+getgenv().reach = 12
+getgenv().wide = 1.5
+getgenv().height = 1.3
+getgenv().visuals = true
+getgenv().guiVisible = true
+getgenv().shapeMode = "rectangle"  -- Default shape mode
+
+local player = game.Players.LocalPlayer
+local UIS = game:GetService("UserInputService")
+local RunService = game:GetService("RunService")
+local TweenService = game:GetService("TweenService")
+
+------------------------------------------------------------
+-- Function to get a rainbow color (cycles over 5 seconds)
+local function getRainbowColor()
+    local hue = (tick() % 5) / 5  -- Cycle hue over 5 seconds
+    return Color3.fromHSV(hue, 1, 1)
+end
+
+------------------------------------------------------------
+-- Display a rainbow, animated "HOMO STUD" intro text
+local function showHomoStudText()
+    local screenGui = Instance.new("ScreenGui")
+    screenGui.Name = "HomoStudGui"
+    screenGui.Parent = game.CoreGui
+
+    local textLabel = Instance.new("TextLabel")
+    textLabel.Size = UDim2.new(1, 0, 0, 100) -- Adjust size to fit the larger text
+    textLabel.Position = UDim2.new(0, 0, 0.5, -50) -- Center vertically
+    textLabel.BackgroundTransparency = 1
+    textLabel.Text = "HOMO STUD"
+    textLabel.TextColor3 = Color3.fromRGB(255, 255, 255)
+    -- Set to false so we can animate TextSize directly
+    textLabel.TextScaled = false
+    textLabel.TextSize = 10  -- Start small for the pop-in effect
+    textLabel.TextStrokeTransparency = 0.5  -- Outline transparency
+    textLabel.TextStrokeColor3 = Color3.fromRGB(0, 0, 0)
+    textLabel.Parent = screenGui
+
+    -- Tween the text to full size (pop in)
+    local tweenIn = TweenService:Create(textLabel, TweenInfo.new(0.5, Enum.EasingStyle.Back, Enum.EasingDirection.Out), {TextSize = 100})
+    tweenIn:Play()
+
+    -- Update the text color continuously to create a rainbow effect
+    local rainbowConn
+    rainbowConn = RunService.RenderStepped:Connect(function()
+        textLabel.TextColor3 = getRainbowColor()
+    end)
+
+    -- Wait 5 seconds before playing the pop-out animation
+    wait(5)
+
+    -- Tween the text out (shrink & fade)
+    local tweenOutSize = TweenService:Create(textLabel, TweenInfo.new(0.5, Enum.EasingStyle.Back, Enum.EasingDirection.In), {TextSize = 10})
+    local tweenOutTrans = TweenService:Create(textLabel, TweenInfo.new(0.5), {TextTransparency = 1})
+    tweenOutSize:Play()
+    tweenOutTrans:Play()
+    tweenOutTrans.Completed:Wait()
+
+    rainbowConn:Disconnect()
+    screenGui:Destroy()
+end
+
+showHomoStudText()
+
+------------------------------------------------------------
+-- Create the main GUI for reach adjustment with pop-in effect
+local function createGUI()
+    local screenGui = Instance.new("ScreenGui")
+    screenGui.Name = "ReachGui"
+    screenGui.Parent = game.CoreGui
+
+    -- Main frame: will tween from zero size to full size
+    local frame = Instance.new("Frame", screenGui)
+    frame.AnchorPoint = Vector2.new(0.5, 0.5)
+    frame.Position = UDim2.new(0.5, 0, 0.5, 0)
+    frame.BackgroundColor3 = Color3.fromRGB(0, 0, 0)
+    frame.BackgroundTransparency = 0
+    frame.BorderSizePixel = 0
+    frame.Size = UDim2.new(0, 0, 0, 0)  -- Start at 0 size
+
+    local frameCorner = Instance.new("UICorner", frame)
+    frameCorner.CornerRadius = UDim.new(0, 20)
+
+    -- Tween frame to full size for pop-in effect
+    local tweenGUI = TweenService:Create(frame, TweenInfo.new(0.5, Enum.EasingStyle.Back, Enum.EasingDirection.Out), {Size = UDim2.new(0, 450, 0, 350)})
+    tweenGUI:Play()
+
+    -- Rainbow Border for the frame
+    local rainbowStroke = Instance.new("UIStroke", frame)
+    rainbowStroke.ApplyStrokeMode = Enum.ApplyStrokeMode.Border
+    rainbowStroke.Thickness = 5
+    rainbowStroke.Transparency = 0.5
+    rainbowStroke.Color = Color3.fromRGB(255, 0, 0)
+    RunService.RenderStepped:Connect(function()
+        local hue = (tick() % 5) / 5
+        rainbowStroke.Color = Color3.fromHSV(hue, 1, 1)
+    end)
+
+    -- Title Label: "HOMO STUD V4"
+    local titleLabel = Instance.new("TextLabel", frame)
+    titleLabel.Size = UDim2.new(1, 0, 0, 40)
+    titleLabel.Position = UDim2.new(0, 0, 0, 0)
+    titleLabel.BackgroundTransparency = 1
+    titleLabel.Text = "HOMO STUD V4"
+    titleLabel.TextColor3 = Color3.fromRGB(180,180,180)
+    titleLabel.TextScaled = false
+    titleLabel.TextSize = 20
+    titleLabel.Font = Enum.Font.GothamSemibold
+    titleLabel.TextStrokeTransparency = 0
+    titleLabel.TextStrokeColor3 = Color3.fromRGB(0,0,0)
+
+    -- "SET REACH" Label below title
+    local setReachLabel = Instance.new("TextLabel", frame)
+    setReachLabel.Size = UDim2.new(1, 0, 0, 30)
+    setReachLabel.Position = UDim2.new(0, 0, 0, 45)
+    setReachLabel.BackgroundTransparency = 1
+    setReachLabel.Text = "SET REACH"
+    setReachLabel.TextColor3 = Color3.fromRGB(180,180,180)
+    setReachLabel.TextScaled = false
+    setReachLabel.TextSize = 16
+    setReachLabel.Font = Enum.Font.Gotham
+    setReachLabel.TextStrokeTransparency = 0
+    setReachLabel.TextStrokeColor3 = Color3.fromRGB(0,0,0)
+
+    -- Slider Background (the scroll bar)
+    local sliderBg = Instance.new("Frame", frame)
+    sliderBg.Size = UDim2.new(0.8, 0, 0, 20)
+    sliderBg.Position = UDim2.new(0.1, 0, 0, 80)
+    sliderBg.BackgroundColor3 = Color3.fromRGB(100,100,100)
+    local sliderBgCorner = Instance.new("UICorner", sliderBg)
+    sliderBgCorner.CornerRadius = UDim.new(0, 10)
+
+    -- Slider Knob ("little dot")
+    local sliderKnob = Instance.new("Frame", sliderBg)
+    sliderKnob.Size = UDim2.new(0, 16, 0, 16)
+    sliderKnob.BackgroundColor3 = Color3.fromRGB(200,200,200)
+    local knobCorner = Instance.new("UICorner", sliderKnob)
+    knobCorner.CornerRadius = UDim.new(0, 10)
+    -- The knob's position is updated in updateSliderPosition
+
+    -- Number Box for reach input (placed at the bottom)
+    local reachInput = Instance.new("TextBox", frame)
+    reachInput.Size = UDim2.new(0, 70, 0, 40)
+    reachInput.Position = UDim2.new(0.5, -35, 1, -45)
+    reachInput.BackgroundColor3 = Color3.fromRGB(70,70,70)
+    reachInput.TextColor3 = Color3.fromRGB(180,180,180)
+    reachInput.Text = tostring(getgenv().reach)
+    reachInput.TextScaled = false
+    reachInput.TextSize = 16
+    reachInput.Font = Enum.Font.Gotham
+    reachInput.ClearTextOnFocus = false
+    reachInput.TextStrokeTransparency = 0
+    reachInput.TextStrokeColor3 = Color3.fromRGB(0,0,0)
+    local reachInputCorner = Instance.new("UICorner", reachInput)
+    reachInputCorner.CornerRadius = UDim.new(0, 10)
+
+    -- Clear the number box text on focus so previous numbers don’t remain
+    reachInput.Focused:Connect(function()
+        reachInput.Text = ""
+    end)
+
+    -- Function to update slider knob and number box from reach
+    local function updateSliderPosition()
+        local sliderWidth = sliderBg.AbsoluteSize.X
+        local knobWidth = sliderKnob.Size.X.Offset
+        local newX = (sliderWidth - knobWidth) * ((getgenv().reach - 1) / 99)
+        sliderKnob.Position = UDim2.new(0, newX, 0, 2)
+        reachInput.Text = tostring(getgenv().reach)
+    end
+
+    -- When the number box loses focus, update reach from its value
+    reachInput.FocusLost:Connect(function(enterPressed)
+        if enterPressed then
+            local newReach = tonumber(reachInput.Text)
+            if newReach then
+                getgenv().reach = newReach
+                updateSliderPosition()
+            else
+                reachInput.Text = tostring(getgenv().reach)
+            end
+        end
+    end)
+
+    -- Draggable slider knob: update reach while dragging
+    local draggingSlider = false
+    sliderKnob.InputBegan:Connect(function(input)
+        if input.UserInputType == Enum.UserInputType.MouseButton1 then
+            draggingSlider = true
+        end
+    end)
+    UIS.InputEnded:Connect(function(input)
+        if input.UserInputType == Enum.UserInputType.MouseButton1 then
+            draggingSlider = false
+        end
+    end)
+    UIS.InputChanged:Connect(function(input)
+        if draggingSlider and input.UserInputType == Enum.UserInputType.MouseMovement then
+            local mouseX = input.Position.X
+            local sliderX = sliderBg.AbsolutePosition.X
+            local sliderWidth = sliderBg.AbsoluteSize.X
+            local knobWidth = sliderKnob.Size.X.Offset
+            local relativeX = math.clamp(mouseX - sliderX, 0, sliderWidth - knobWidth)
+            local percent = relativeX / (sliderWidth - knobWidth)
+            getgenv().reach = math.floor(1 + percent * 99)
+            updateSliderPosition()
+        end
+    end)
+
+    -- Toggle shape button with improved styling
+    local toggleShapeButton = Instance.new("TextButton", frame)
+    toggleShapeButton.Size = UDim2.new(0.8, 0, 0, 30)
+    toggleShapeButton.Position = UDim2.new(0.1, 0, 0, 150)
+    toggleShapeButton.BackgroundColor3 = Color3.fromRGB(70,70,70)
+    toggleShapeButton.TextColor3 = Color3.new(1,1,1)
+    toggleShapeButton.TextScaled = true
+    toggleShapeButton.Font = Enum.Font.Gotham
+    toggleShapeButton.TextStrokeTransparency = 0
+    toggleShapeButton.Text = "Change shape to: box"
+    local toggleShapeButtonCorner = Instance.new("UICorner", toggleShapeButton)
+    toggleShapeButtonCorner.CornerRadius = UDim.new(0, 10)
+    local toggleShapeButtonGradient = Instance.new("UIGradient", toggleShapeButton)
+    toggleShapeButtonGradient.Color = ColorSequence.new{
+        ColorSequenceKeypoint.new(0, Color3.fromRGB(85,170,255)),
+        ColorSequenceKeypoint.new(1, Color3.fromRGB(255,85,127))
+    }
+    toggleShapeButtonGradient.Rotation = 45
+    local toggleShapeButtonStroke = Instance.new("UIStroke", toggleShapeButton)
+    toggleShapeButtonStroke.Color = Color3.new(0,0,0)
+    toggleShapeButtonStroke.Thickness = 2
+
+    toggleShapeButton.MouseButton1Click:Connect(function()
+        if getgenv().shapeMode == "rectangle" then
+            getgenv().shapeMode = "box"
+            toggleShapeButton.Text = "Change shape to: rectangle"
+        else
+            getgenv().shapeMode = "rectangle"
+            toggleShapeButton.Text = "Change shape to: box"
+        end
+    end)
+
+    -- Make the GUI draggable by clicking anywhere on it except the slider area
+    local draggingFrame = false
+    local dragInput, dragStart, startPos
+    frame.InputBegan:Connect(function(input)
+        if input.UserInputType == Enum.UserInputType.MouseButton1 then
+            local absPos = sliderBg.AbsolutePosition
+            local absSize = sliderBg.AbsoluteSize
+            if input.Position.X >= absPos.X and input.Position.X <= absPos.X + absSize.X and
+               input.Position.Y >= absPos.Y and input.Position.Y <= absPos.Y + absSize.Y then
+                return
+            end
+            draggingFrame = true
+            dragStart = input.Position
+            startPos = frame.Position
+        end
+    end)
+    frame.InputChanged:Connect(function(input)
+        if input.UserInputType == Enum.UserInputType.MouseMovement then
+            dragInput = input
+        end
+    end)
+    UIS.InputChanged:Connect(function(input)
+        if draggingFrame and input == dragInput then
+            local delta = input.Position - dragStart
+            frame.Position = UDim2.new(
+                startPos.X.Scale,
+                startPos.X.Offset + delta.X,
+                startPos.Y.Scale,
+                startPos.Y.Offset + delta.Y
+            )
+        end
+    end)
+    UIS.InputEnded:Connect(function(input)
+        if input.UserInputType == Enum.UserInputType.MouseButton1 then
+            draggingFrame = false
+        end
+    end)
+
+    getgenv().guiFrame = frame
+end
+
+------------------------------------------------------------
+-- Toggle GUI and hitbox visuals with "Q" key
+UIS.InputBegan:Connect(function(input)
+    if input.KeyCode == Enum.KeyCode.Q then
+        if getgenv().guiFrame then
+            getgenv().guiFrame.Visible = not getgenv().guiFrame.Visible
+        end
+        getgenv().visuals = not getgenv().visuals
+    end
+end)
+
+if not getgenv().guiFrame then
+    createGUI()
+end
+
+------------------------------------------------------------
+-- Continuously update tool visuals using the reach value and apply rainbow effect
+while true do
+    if getgenv().visuals then
+        for _, tool in pairs(game:GetService("Players").LocalPlayer.Character:GetChildren()) do
+            if tool:IsA("Tool") and tool:FindFirstChild("Handle") then
+                local handle = tool.Handle
+                local selectionBox = handle:FindFirstChild("SelectionBox") or Instance.new("SelectionBox", handle)
+                selectionBox.Adornee = handle
+                selectionBox.Color3 = getRainbowColor()  -- Rainbow effect
+                selectionBox.Transparency = 0.5
+                selectionBox.Visible = true
+                handle.Massless = true
+                if getgenv().shapeMode == "rectangle" then
+                    handle.Shape = Enum.PartType.Block
+                    handle.Size = Vector3.new(getgenv().height, getgenv().wide, getgenv().reach)
+                else
+                    handle.Shape = Enum.PartType.Block
+                    handle.Size = Vector3.new(getgenv().reach, getgenv().reach, getgenv().reach)
+                    handle.BrickColor = BrickColor.new("Really red")
+                    handle.Transparency = 0.4
+                    handle.Material = Enum.Material.Neon
+                    handle.CanCollide = false
+                end
+            end
+        end
+    else
+        for _, tool in pairs(game:GetService("Players").LocalPlayer.Character:GetChildren()) do
+            if tool:IsA("Tool") and tool:FindFirstChild("Handle") then
+                local handle = tool.Handle
+                if handle:FindFirstChild("SelectionBox") then
+                    handle.SelectionBox.Visible = false
+                end
+            end
+        end
+    end
+    wait(0.1)
+end
