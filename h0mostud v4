@@ -1,7 +1,7 @@
 --https://discord.gg/AfNyhky3
 
 -- Global settings
-getgenv().reach = 12
+getgenv().reach = 9
 getgenv().wide = 1.5
 getgenv().height = 1.3
 getgenv().visuals = true
