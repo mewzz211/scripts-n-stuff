@@ -1,7 +1,7 @@
 --https://discord.gg/AfNyhky3
 
 -- Global settings
-getgenv().reach = 9
+getgenv().reach = 12
 getgenv().wide = 1.5
 getgenv().height = 1.3
 getgenv().visuals = true
@@ -21,7 +21,7 @@ local function getRainbowColor()
 end
 
 ------------------------------------------------------------
--- Display a rainbow, animated "HOMO STUD" intro text
+-- Display a rainbow, animated "HOMO STUD" intro text with pop-in/out effect
 local function showHomoStudText()
     local screenGui = Instance.new("ScreenGui")
     screenGui.Name = "HomoStudGui"
@@ -33,9 +33,8 @@ local function showHomoStudText()
     textLabel.BackgroundTransparency = 1
     textLabel.Text = "HOMO STUD"
     textLabel.TextColor3 = Color3.fromRGB(255, 255, 255)
-    -- Set to false so we can animate TextSize directly
-    textLabel.TextScaled = false
-    textLabel.TextSize = 10  -- Start small for the pop-in effect
+    textLabel.TextScaled = false  -- We'll animate TextSize directly
+    textLabel.TextSize = 10  -- Start small for pop-in effect
     textLabel.TextStrokeTransparency = 0.5  -- Outline transparency
     textLabel.TextStrokeColor3 = Color3.fromRGB(0, 0, 0)
     textLabel.Parent = screenGui
@@ -44,7 +43,7 @@ local function showHomoStudText()
     local tweenIn = TweenService:Create(textLabel, TweenInfo.new(0.5, Enum.EasingStyle.Back, Enum.EasingDirection.Out), {TextSize = 100})
     tweenIn:Play()
 
-    -- Update the text color continuously to create a rainbow effect
+    -- Update the text color continuously for a rainbow effect
     local rainbowConn
     rainbowConn = RunService.RenderStepped:Connect(function()
         textLabel.TextColor3 = getRainbowColor()
@@ -67,13 +66,13 @@ end
 showHomoStudText()
 
 ------------------------------------------------------------
--- Create the main GUI for reach adjustment with pop-in effect
+-- Create the main GUI for reach adjustment with a pop-in effect
 local function createGUI()
     local screenGui = Instance.new("ScreenGui")
     screenGui.Name = "ReachGui"
     screenGui.Parent = game.CoreGui
 
-    -- Main frame: will tween from zero size to full size
+    -- Main frame: starts at 0 size and tweens to full size for a pop-in effect
     local frame = Instance.new("Frame", screenGui)
     frame.AnchorPoint = Vector2.new(0.5, 0.5)
     frame.Position = UDim2.new(0.5, 0, 0.5, 0)
@@ -140,7 +139,7 @@ local function createGUI()
     sliderKnob.BackgroundColor3 = Color3.fromRGB(200,200,200)
     local knobCorner = Instance.new("UICorner", sliderKnob)
     knobCorner.CornerRadius = UDim.new(0, 10)
-    -- The knob's position is updated in updateSliderPosition
+    -- The knob's position is updated in updateSliderPosition below
 
     -- Number Box for reach input (placed at the bottom)
     local reachInput = Instance.new("TextBox", frame)
@@ -299,40 +298,50 @@ if not getgenv().guiFrame then
 end
 
 ------------------------------------------------------------
--- Continuously update tool visuals using the reach value and apply rainbow effect
-while true do
-    if getgenv().visuals then
-        for _, tool in pairs(game:GetService("Players").LocalPlayer.Character:GetChildren()) do
-            if tool:IsA("Tool") and tool:FindFirstChild("Handle") then
-                local handle = tool.Handle
-                local selectionBox = handle:FindFirstChild("SelectionBox") or Instance.new("SelectionBox", handle)
-                selectionBox.Adornee = handle
-                selectionBox.Color3 = getRainbowColor()  -- Rainbow effect
-                selectionBox.Transparency = 0.5
-                selectionBox.Visible = true
-                handle.Massless = true
-                if getgenv().shapeMode == "rectangle" then
-                    handle.Shape = Enum.PartType.Block
-                    handle.Size = Vector3.new(getgenv().height, getgenv().wide, getgenv().reach)
-                else
-                    handle.Shape = Enum.PartType.Block
-                    handle.Size = Vector3.new(getgenv().reach, getgenv().reach, getgenv().reach)
-                    handle.BrickColor = BrickColor.new("Really red")
-                    handle.Transparency = 0.4
-                    handle.Material = Enum.Material.Neon
-                    handle.CanCollide = false
+-- Update tool visuals in the player's character with a safe update loop
+local function updateVisuals(character)
+    while character and character.Parent do
+        if getgenv().visuals then
+            for _, tool in pairs(character:GetChildren()) do
+                if tool:IsA("Tool") and tool:FindFirstChild("Handle") then
+                    local handle = tool.Handle
+                    local selectionBox = handle:FindFirstChild("SelectionBox") or Instance.new("SelectionBox", handle)
+                    selectionBox.Adornee = handle
+                    selectionBox.Color3 = getRainbowColor()  -- Rainbow effect
+                    selectionBox.Transparency = 0.5
+                    selectionBox.Visible = true
+                    handle.Massless = true
+                    if getgenv().shapeMode == "rectangle" then
+                        handle.Shape = Enum.PartType.Block
+                        handle.Size = Vector3.new(getgenv().height, getgenv().wide, getgenv().reach)
+                    else
+                        handle.Shape = Enum.PartType.Block
+                        handle.Size = Vector3.new(getgenv().reach, getgenv().reach, getgenv().reach)
+                        handle.BrickColor = BrickColor.new("Really red")
+                        handle.Transparency = 0.4
+                        handle.Material = Enum.Material.Neon
+                        handle.CanCollide = false
+                    end
+                end
+            end
+        else
+            for _, tool in pairs(character:GetChildren()) do
+                if tool:IsA("Tool") and tool:FindFirstChild("Handle") then
+                    local handle = tool.Handle
+                    if handle:FindFirstChild("SelectionBox") then
+                        handle.SelectionBox.Visible = false
+                    end
                 end
             end
         end
-    else
-        for _, tool in pairs(game:GetService("Players").LocalPlayer.Character:GetChildren()) do
-            if tool:IsA("Tool") and tool:FindFirstChild("Handle") then
-                local handle = tool.Handle
-                if handle:FindFirstChild("SelectionBox") then
-                    handle.SelectionBox.Visible = false
-                end
-            end
-        end
+        wait(0.2)
     end
-    wait(0.1)
 end
+
+if player.Character then
+    spawn(function() updateVisuals(player.Character) end)
+end
+
+player.CharacterAdded:Connect(function(character)
+    spawn(function() updateVisuals(character) end)
+end)
